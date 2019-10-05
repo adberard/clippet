@@ -20,11 +20,8 @@ selected=($(highlight -O ansi -S sh $clippetsFile | tr "##" "##" |
   zle reset-prompt
   return $ret
 }
-zle     -N   clippets-get
-bindkey '^O' clippets-get
 
-
-clippets-add() {
+_clippets-add() {
 local ret=$LBUFFER
 # setopt localoptions noglobsubst noposixbuiltins pipefail 2> /dev/null
 # echo "$ret" # >> $clippetsFile
@@ -34,10 +31,8 @@ echo "Command added to cli snippets"
 
 return cat <<< "$ret"
 }
-zle     -N   clippets-add
-bindkey '^U' clippets-add
 
-_fzf_marker_placeholder() {
+_clippet-jump-placehold() {
   local strp pos placeholder
   strp=$(echo $BUFFER | grep -Z -P -b -o "\{\{[^\{\}]+\}\}")
   strp=$(echo "$strp" | head -1)
@@ -53,9 +48,9 @@ _fzf_marker_placeholder() {
   fi
 }
 
-clippets-next() {
+_clippets-next() {
   if echo "$BUFFER" | grep -q -P "{{"; then
-    _fzf_marker_placeholder
+    _clippet-jump-placeholder
   else
     local selected
     if selected=$(cat ${FZF_MARKER_CONF_DIR:-~/.config/clisnippets} | 
@@ -67,14 +62,12 @@ clippets-next() {
     zle redisplay
   fi
 }
-# match=$(echo "$BUFFER" | perl -nle 'print $& if m{\{\{.+?\}\}}' | head -n 1)
-#   if [[ ! -z "$match" ]]; then
-#     len=${#match}
-#     match=$(echo "$match" | sed 's/"/\\"/g')
-#     placeholder_offset=$(echo "$BUFFER" | python -c 'import sys;keyboard_input = raw_input if sys.version_info[0] == 2 else input; print(keyboard_input().index("'$match'"))')
-#       CURSOR="$placeholder_offset"
-#       BUFFER="${BUFFER[1,$placeholder_offset]}${BUFFER[$placeholder_offset+1+$len,-1]}"
-#     fi
 
-zle     -N   clippets-next
-bindkey '^Y' clippets-next
+zle     -N   _clippets-next
+bindkey "${CLIPPET_NEXT:^Y}" _clippets-next
+zle     -N   _clippets-add
+bindkey "^U" _clippets-add
+zle     -N   clippets-get
+bindkey "^O" clippets-get
+
+
